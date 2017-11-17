@@ -8,7 +8,7 @@
 		SPANNING = 3;
 	
   module.exports = function( THREE ) {
-    var ThreeBSP = function( geometry ) {
+    var ThreeBSP = function( geometry, materialIndex ) {
       // Convert THREE.Geometry to ThreeBSP
       var i, _length_i,
         face, vertex, faceVertexUvs, uvs,
@@ -39,43 +39,43 @@
         if ( face instanceof THREE.Face3 ) {
           vertex = geometry.vertices[ face.a ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
           
           vertex = geometry.vertices[ face.b ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
           
           vertex = geometry.vertices[ face.c ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
         } else if ( typeof THREE.Face4 ) {
           vertex = geometry.vertices[ face.a ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[0], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
           
           vertex = geometry.vertices[ face.b ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[1], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[1], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
           
           vertex = geometry.vertices[ face.c ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[2], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
           
           vertex = geometry.vertices[ face.d ];
                                   uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[3].x, faceVertexUvs[3].y ) : null;
-                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[3], uvs );
+                                  vertex = new ThreeBSP.Vertex( vertex.x, vertex.y, vertex.z, face.vertexNormals[3], uvs, materialIndex );
           vertex.applyMatrix4(this.matrix);
           polygon.vertices.push( vertex );
         } else {
@@ -153,6 +153,7 @@
           verticeUvs = [];
           
           vertex = polygon.vertices[0];
+          var materialIndex = vertex.materialIndex;
           verticeUvs.push( new THREE.Vector2( vertex.uv.x, vertex.uv.y ) );
           vertex = new THREE.Vector3( vertex.x, vertex.y, vertex.z );
           vertex.applyMatrix4(matrix);
@@ -190,7 +191,9 @@
             vertex_idx_a,
             vertex_idx_b,
             vertex_idx_c,
-            new THREE.Vector3( polygon.normal.x, polygon.normal.y, polygon.normal.z )
+            new THREE.Vector3( polygon.normal.x, polygon.normal.y, polygon.normal.z ),
+            null,
+            materialIndex
           );
           
           geometry.faces.push( face );
@@ -261,7 +264,7 @@
       
       return this;
     };
-    ThreeBSP.Polygon.prototype.classifyVertex = function( vertex ) {  
+    ThreeBSP.Polygon.prototype.classifyVertex = function( vertex ) {
       var side_value = this.normal.dot( vertex ) - this.w;
       
       if ( side_value < -EPSILON ) {
@@ -344,16 +347,17 @@
         if ( b.length >= 3 ) back.push( new ThreeBSP.Polygon( b ).calculateProperties() );
       }
     };
-    
-    ThreeBSP.Vertex = function( x, y, z, normal, uv ) {
+
+    ThreeBSP.Vertex = function( x, y, z, normal, uv, materialIndex ) {
       this.x = x;
       this.y = y;
       this.z = z;
       this.normal = normal || new THREE.Vector3;
       this.uv = uv || new THREE.Vector2;
+      this.materialIndex = materialIndex || 0;
     };
     ThreeBSP.Vertex.prototype.clone = function() {
-      return new ThreeBSP.Vertex( this.x, this.y, this.z, this.normal.clone(), this.uv.clone() );
+      return new ThreeBSP.Vertex( this.x, this.y, this.z, this.normal.clone(), this.uv.clone(), this.materialIndex );
     };
     ThreeBSP.Vertex.prototype.add = function( vertex ) {
       this.x += vertex.x;
